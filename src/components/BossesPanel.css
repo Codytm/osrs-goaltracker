@@ -1,0 +1,67 @@
+.bosses-section { margin-bottom: 32px; }
+
+.bosses-section__header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.bosses-section__header h2 { font-size: 18px; }
+.bosses-section__count { font-size: 12px; color: var(--text-muted); }
+
+.bosses-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 20px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+}
+
+.bosses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 6px;
+}
+
+.boss-card {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.boss-card:hover { border-color: var(--gold-dim); background: var(--bg-hover); }
+.boss-card--has-goal { border-color: var(--gold-dim); }
+
+.boss-card__name {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.boss-card__kc {
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--gold-bright);
+  line-height: 1;
+}
+.boss-card__rank {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+.boss-card__goal-pip {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+}

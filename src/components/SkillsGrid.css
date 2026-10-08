@@ -1,0 +1,24 @@
+.skills-section { margin-bottom: 32px; }
+
+.skills-section__header {
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+  margin-bottom: 14px;
+}
+.skills-section__header h2 { font-size: 18px; }
+
+.skills-section__totals {
+  display: flex;
+  gap: 20px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.skills-section__totals .dim { color: var(--text-muted); margin-right: 4px; }
+
+/* Mirror OSRS in-game skills tab: 3 columns */
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
