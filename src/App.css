@@ -22,11 +22,19 @@
 
 .app-error__detail {
   margin-top: 8px;
-  font-family: monospace;
-  font-size: 11px;
+  font-size: 13px;
   white-space: pre-wrap;
   color: #c07070;
-  opacity: 0.9;
+}
+
+.app-notice {
+  background: rgba(200, 169, 81, 0.1);
+  border: 1px solid rgba(200, 169, 81, 0.35);
+  color: var(--gold-bright);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  font-size: 14px;
 }
 
 .app-loading {

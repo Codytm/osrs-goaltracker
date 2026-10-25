@@ -38,7 +38,8 @@ export const SKILL_ORDER = [
   'Prayer','Crafting','Firemaking',
   'Magic','Fletching','Woodcutting',
   'Runecraft','Slayer','Farming',
-  'Construction','Hunter','Overall',
+  'Construction','Hunter','Sailing',
+  'Overall',
 ];
 
 export const XP_TABLE: number[] = (() => {

@@ -26,7 +26,7 @@ export default function SkillsGrid({ player, goals, onAddGoal }: Props) {
       </div>
 
       <div className="skills-grid">
-        {SKILL_ORDER.map(name => {
+        {[...SKILL_ORDER, ...Object.keys(player.skills).filter(name => !SKILL_ORDER.includes(name))].map(name => {
           const skill = player.skills[name];
           if (!skill) return null;
           return (

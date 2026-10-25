@@ -72,7 +72,7 @@ export default function Sidebar({ activeTab, onTabChange, onSearch, currentUsern
       </nav>
 
       <div className="sidebar__footer">
-        <p>Data from OSRS Hiscores</p>
+        <p>Stats via Wise Old Man</p>
         <p>Goals saved in your browser</p>
       </div>
     </aside>

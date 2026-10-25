@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import type { PlayerData } from './types';
 import { fetchPlayer } from './services/osrsApi';
 import { useGoals } from './hooks/useGoals';
@@ -14,24 +14,35 @@ type Tab = 'skills' | 'bosses' | 'goals';
 export default function App() {
   const [player, setPlayer] = useState<PlayerData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('Fetching hiscores…');
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('skills');
   const [modalOpen, setModalOpen] = useState(false);
   const [modalPrefillSkill, setModalPrefillSkill] = useState<string | undefined>();
   const [modalPrefillBoss, setModalPrefillBoss] = useState<string | undefined>();
 
   const { goals, addGoal, removeGoal } = useGoals();
+  const requestId = useRef(0);
 
   const handleSearch = useCallback(async (username: string) => {
+    const id = ++requestId.current;
     setLoading(true);
     setError(null);
+    setNotice(null);
+    setStatus('Looking up player…');
     try {
-      const data = await fetchPlayer(username);
-      setPlayer(data);
+      const result = await fetchPlayer(username, message => {
+        if (id === requestId.current) setStatus(message);
+      });
+      if (id !== requestId.current) return;
+      setPlayer(result.player);
+      setNotice(result.notice);
     } catch (e: unknown) {
+      if (id !== requestId.current) return;
       setError(e instanceof Error ? e.message : 'Failed to fetch player data.');
     } finally {
-      setLoading(false);
+      if (id === requestId.current) setLoading(false);
     }
   }, []);
 
@@ -56,14 +67,18 @@ export default function App() {
         {error && (
           <div className="app-error">
             <strong>Could not load player data</strong>
-            <pre className="app-error__detail">{error}</pre>
+            <p className="app-error__detail">{error}</p>
           </div>
+        )}
+
+        {notice && !loading && (
+          <div className="app-notice">{notice}</div>
         )}
 
         {loading && (
           <div className="app-loading">
             <div className="app-loading__spinner" />
-            <p>Fetching hiscores…</p>
+            <p>{status}</p>
           </div>
         )}
 
