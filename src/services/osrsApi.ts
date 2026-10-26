@@ -141,8 +141,22 @@ interface WomPlayer {
   } | null;
 }
 
-function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+function sleep(ms: number, signal?: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new DOMException('Aborted', 'AbortError'));
+      return;
+    }
+    const timer = setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort);
+      resolve();
+    }, ms);
+    const onAbort = () => {
+      clearTimeout(timer);
+      reject(new DOMException('Aborted', 'AbortError'));
+    };
+    signal?.addEventListener('abort', onAbort, { once: true });
+  });
 }
 
 function titleCaseMetric(metric: string): string {
@@ -151,6 +165,40 @@ function titleCaseMetric(metric: string): string {
 
 function bossName(metric: string): string {
   return BOSS_LABELS[metric] ?? titleCaseMetric(metric);
+}
+
+const SKILL_METRICS: Record<string, string> = Object.fromEntries(
+  Object.entries(SKILL_LABELS).map(([metric, label]) => [label, metric]),
+);
+
+const BOSS_METRICS: Record<string, string> = Object.fromEntries(
+  Object.entries(BOSS_LABELS).map(([metric, label]) => [label, metric]),
+);
+
+export function skillMetric(name: string): string {
+  return SKILL_METRICS[name] ?? name.toLowerCase();
+}
+
+export function bossMetric(name: string): string {
+  return BOSS_METRICS[name] ?? name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+}
+
+export type ChartRange = 'day' | 'week' | 'month' | 'six_months' | 'year';
+
+export interface TimelinePoint {
+  value: number;
+  date: number;
+}
+
+function rangeQuery(range: ChartRange): string {
+  if (range !== 'six_months') {
+    const period = range === 'day' ? 'day' : range;
+    return `period=${period}`;
+  }
+  const end = new Date();
+  const start = new Date();
+  start.setMonth(start.getMonth() - 6);
+  return `startDate=${encodeURIComponent(start.toISOString())}&endDate=${encodeURIComponent(end.toISOString())}`;
 }
 
 function formatWhen(iso: string): string {
@@ -183,30 +231,40 @@ function friendlyLookupError(message: string, username: string): string {
   return message;
 }
 
-async function womFetch(url: string, init: RequestInit, timeoutMs: number, attempts: number): Promise<Response> {
+async function womFetch(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number,
+  attempts: number,
+  external?: AbortSignal,
+): Promise<Response> {
   let lastError: Error | null = null;
 
   for (let attempt = 0; attempt < attempts; attempt++) {
+    if (external?.aborted) throw new DOMException('Aborted', 'AbortError');
     try {
       const res = await fetch(url, {
         ...init,
         headers: { Accept: 'application/json', ...init.headers },
-        signal: AbortSignal.timeout(timeoutMs),
+        signal: external
+          ? AbortSignal.any([external, AbortSignal.timeout(timeoutMs)])
+          : AbortSignal.timeout(timeoutMs),
       });
 
       if (res.status >= 500) {
         lastError = new Error(`Wise Old Man returned HTTP ${res.status}.`);
-        await sleep(1000 * (attempt + 1));
+        await sleep(1000 * (attempt + 1), external);
         continue;
       }
 
       return res;
     } catch (error) {
+      if (external?.aborted) throw error;
       const name = error instanceof Error ? error.name : '';
       lastError = name === 'TimeoutError' || name === 'AbortError'
         ? new Error('The hiscores lookup timed out.')
         : new Error('Could not reach Wise Old Man. Check your connection and try again.');
-      await sleep(1000 * (attempt + 1));
+      await sleep(1000 * (attempt + 1), external);
     }
   }
 
@@ -320,4 +378,22 @@ export async function fetchPlayer(
     }
     throw error instanceof Error ? error : new Error('Failed to fetch player data.');
   }
+}
+
+export async function fetchTimeline(
+  username: string,
+  metric: string,
+  range: ChartRange,
+  signal?: AbortSignal,
+): Promise<TimelinePoint[]> {
+  const url = `${WOM_BASE}/players/${encodeURIComponent(username)}/snapshots/timeline?metric=${encodeURIComponent(metric)}&${rangeQuery(range)}`;
+  const res = await womFetch(url, { method: 'GET' }, 20_000, 2, signal);
+  if (!res.ok) throw new Error(await readMessage(res));
+  const rows = await res.json() as { value?: number; date?: string }[];
+  if (!Array.isArray(rows)) return [];
+  return rows
+    .filter(row => typeof row.value === 'number' && row.value >= 0 && typeof row.date === 'string')
+    .map(row => ({ value: row.value as number, date: new Date(row.date as string).getTime() }))
+    .filter(point => !Number.isNaN(point.date))
+    .sort((a, b) => a.date - b.date);
 }

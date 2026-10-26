@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import './Sidebar.css';
 
-type Tab = 'skills' | 'bosses' | 'goals';
+type Tab = 'skills' | 'bosses' | 'progress' | 'goals';
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: 'skills', label: '⚔ Skills' },
+  { id: 'bosses', label: '☠ Bosses' },
+  { id: 'progress', label: '📈 Progress' },
+  { id: 'goals', label: '🎯 Goals' },
+];
 
 interface Props {
   activeTab: Tab;
@@ -60,13 +67,13 @@ export default function Sidebar({ activeTab, onTabChange, onSearch, currentUsern
       </div>
 
       <nav className="sidebar__nav">
-        {(['skills', 'bosses', 'goals'] as Tab[]).map(tab => (
+        {TABS.map(tab => (
           <button
-            key={tab}
-            className={`sidebar__nav-item ${activeTab === tab ? 'active' : ''}`}
-            onClick={() => onTabChange(tab)}
+            key={tab.id}
+            className={`sidebar__nav-item ${activeTab === tab.id ? 'active' : ''}`}
+            onClick={() => onTabChange(tab.id)}
           >
-            {tab === 'skills' ? '⚔ Skills' : tab === 'bosses' ? '☠ Bosses' : '🎯 Goals'}
+            {tab.label}
           </button>
         ))}
       </nav>

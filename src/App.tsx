@@ -6,10 +6,11 @@ import Sidebar from './components/Sidebar';
 import SkillsGrid from './components/SkillsGrid';
 import BossesPanel from './components/BossesPanel';
 import GoalsPanel from './components/GoalsPanel';
+import ProgressPanel from './components/ProgressPanel';
 import GoalModal from './components/GoalModal';
 import './App.css';
 
-type Tab = 'skills' | 'bosses' | 'goals';
+type Tab = 'skills' | 'bosses' | 'progress' | 'goals';
 
 export default function App() {
   const [player, setPlayer] = useState<PlayerData | null>(null);
@@ -117,6 +118,10 @@ export default function App() {
                 goals={goals}
                 onAddGoal={(bossName) => openModal(undefined, bossName)}
               />
+            )}
+
+            {activeTab === 'progress' && (
+              <ProgressPanel player={player} />
             )}
 
             {activeTab === 'goals' && (
